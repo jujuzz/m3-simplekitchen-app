@@ -1,0 +1,15 @@
+@import "colors.scss";
+body{
+    background-color: $backgroundColor1;
+    table{
+        margin-top: 6rem;
+        width: 60%;
+        height: auto;
+        text-align: center;
+        background-color: white;
+        th{
+            background-color: black;
+            color: white;
+        }
+    }
+}
