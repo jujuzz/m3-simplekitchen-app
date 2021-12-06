@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const auth = require('http-auth');
+const bcrypt = require('bcrypt');
 const { check, validationResult } = require('express-validator');
 
 const router = express.Router();
@@ -12,20 +13,25 @@ const basic = auth.basic({
 
 router.get('/', (req, res) => {
   //res.send('It works!');
-  res.render('form', { title: 'Registration form' });
+  res.render('index');
+  // res.render('index', { title: 'Registration form' });
+});
+
+router.get('/register', (req, res) => {
+  res.render('register');
 });
 
 router.get('/registrations', basic.check((req, res) => {
   Registration.find()
     .then((registrations) => {
-      res.render('index', { title: 'Listing registrations', registrations });
+      res.render('registrations', { title: 'Listing registrations', registrations });
     })
     .catch(() => { 
       res.send('Sorry! Something went wrong.'); 
     });
 }));
 
-router.post('/', 
+router.post('/register', 
     [
         check('name')
         .isLength({ min: 1 })
@@ -34,19 +40,23 @@ router.post('/',
         .isLength({ min: 1 })
         .withMessage('Please enter an email'),
     ],
-    (req, res) => {
+    async(req, res) => {
         //console.log(req.body);
         const errors = validationResult(req);
         if (errors.isEmpty()) {
           const registration = new Registration(req.body);
+          const salt = await bcrypt.genSalt(10);
+          registration.password = await bcrypt.hash(registration.password, salt);
           registration.save()
-            .then(() => {res.send('Thank you for your registration!');})
+            .then(() => {
+              res.render('thankyou');
+            })
             .catch((err) => {
               console.log(err);
               res.send('Sorry! Something went wrong.');
             });
           } else {
-            res.render('form', { 
+            res.render('register', { 
                 title: 'Registration form',
                 errors: errors.array(),
                 data: req.body,
